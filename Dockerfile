@@ -4,7 +4,7 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     TZ=Asia/Shanghai
 #国内镜像网站，本地测试可用
-RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list 2>/dev/null || true
+#RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list 2>/dev/null || true
 # 一次性安装所有依赖
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -25,7 +25,7 @@ WORKDIR /app
 
 # 安装 Python 依赖
 COPY requirements.txt .
-#RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 # 加上清华源，防止下载超时
 #RUN pip install --no-cache-dir -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 # 拷贝全部代码
