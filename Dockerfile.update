@@ -1,0 +1,8 @@
+# 基于现有ARM64镜像，只更新Python代码
+FROM tuziluoo/scrapers:latest-arm64
+
+# 只复制更新的Python文件
+COPY *.py /app/
+COPY db_config.py /app/
+
+WORKDIR /app

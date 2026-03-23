@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # NOAA 海洋数据爬虫
+  noaa-scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: noaa-scrapers:latest
+    container_name: noaa-scraper
+    environment:
+      # 数据库配置（根据实际情况修改）
+      - DB_HOST=database-1.cxik82g8267p.us-east-2.rds.amazonaws.com
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=oceantest1
+    command: noaa_combined_scraper.py
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    networks:
+      - scraper-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"  # 只限制Docker容器日志，不限制./logs中的文件
+        max-file: "3"
+
+  # 气象报文爬虫
+  baowen-scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: noaa-scrapers:latest
+    container_name: baowen-scraper
+    environment:
+      # 数据库配置（与noaa-scraper相同）
+      - DB_HOST=database-1.cxik82g8267p.us-east-2.rds.amazonaws.com
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=oceantest1
+    command: baowen_combined_scraper.py
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    networks:
+      - scraper-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"  # 只限制Docker容器日志，不限制./logs中的文件
+        max-file: "3"
+
+  # FastAPI 服务
+  api-service:
+    build:
+      context: ./fast_api
+      dockerfile: Dockerfile
+    image: noaa-api:latest
+    container_name: noaa-api
+    environment:
+      # 数据库配置（与爬虫相同）
+      - DB_HOST=database-1.cxik82g8267p.us-east-2.rds.amazonaws.com
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=oceantest1
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    depends_on:
+      - noaa-scraper
+    networks:
+      - scraper-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"  # 只限制Docker容器日志
+        max-file: "3"
+
+networks:
+  scraper-network:
+    driver: bridge
