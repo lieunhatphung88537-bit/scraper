@@ -37,12 +37,12 @@ import requests
 # Healthchecks.io 监控配置（单爬虫级别）
 # 为每个爬虫在 https://healthchecks.io 创建独立的监控项，然后填入对应的UUID
 HEALTHCHECKS_UUIDS = {
-    'TXT': '232b278e-8cbe-4527-a962-34bc54ec2798',      # NOAA TXT数据爬虫（填入UUID）
-    'OCEAN': '01d3b56c-7847-4e9e-bd85-3c592fda0bef',    # NOAA OCEAN数据爬虫（填入UUID）
-    'MULTI': '56541a33-cf68-4a4e-8974-7b4080dd4521',    # NOAA 多类型爬虫（填入UUID）
+    'TXT': '89a066e8-2aaf-446b-8440-6a6c64b5e791',      # NOAA TXT数据爬虫（填入UUID）
+    'OCEAN': 'e341c108-57af-44a8-804a-731e2d4d5a17',    # NOAA OCEAN数据爬虫（填入UUID）
+    'MULTI': '94bbbe83-2cb3-4125-9a00-1fe96e3b0eb7',    # NOAA 多类型爬虫（填入UUID）
 }
 HEALTHCHECKS_BASE_URL = 'https://hc-ping.com'
-HEARTBEAT_INTERVAL = 60  # 心跳间隔（秒），任务运行期间每60秒发送一次
+HEARTBEAT_INTERVAL = 1440  # 心跳间隔（秒），任务运行期间每60秒发送一次
 
 # 配置日志
 def setup_main_logging():
@@ -332,9 +332,9 @@ class NOAACombinedManager:
         multi_interval = self._get_env_int('MULTI_INTERVAL', 2)
         
         # 最小间隔限制
-        txt_interval = max(2, txt_interval)
-        ocean_interval = max(2, ocean_interval)
-        multi_interval = max(2, multi_interval)
+        txt_interval = max(1440, txt_interval)      #一天爬一次
+        ocean_interval = max(1440, ocean_interval)
+        multi_interval = max(1440, multi_interval)
         
         self.logger.info("=" * 70)
         self.logger.info("  NOAA 统一爬虫管理器 v1.0")
