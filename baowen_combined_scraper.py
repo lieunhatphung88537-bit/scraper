@@ -32,12 +32,12 @@ import requests
 # Healthchecks.io 监控配置（单爬虫级别）
 # 为每个爬虫在 https://healthchecks.io 创建独立的监控项，然后填入对应的UUID
 HEALTHCHECKS_UUIDS = {
-    'OGIMET': '81eb7b89-91a2-421e-b333-6403c05be762',     # OGIMET METAR/TAF爬虫（填入UUID）
-    'SYNOP': '02c119bb-1091-4591-8e13-f77b5117cd2c',      # SYNOP爬虫（填入UUID）
-    'SKYVECTOR': '8a7a5089-ee0f-4230-853b-1e0baf84ad36',  # SkyVector爬虫（填入UUID）
-    'IEM': 'd8b70ab5-7085-436a-9c5a-55bd73864f45',        # IEM爬虫（填入UUID）
-    'AWC': 'f14d258e-d056-499c-a17e-71e6f09aa9a8',        # AWC爬虫（填入UUID）
-    'NWS': 'd6b85859-2b9e-45c7-bfba-d52063a33934',        # NWS爬虫（填入UUID）
+    'OGIMET': 'c07ef118-953a-4cf7-b9e4-35549f7ea62b',     # OGIMET METAR/TAF爬虫（填入UUID）
+    'SYNOP': '6d7b28b2-be34-46b4-af99-6ad05b40c05c',      # SYNOP爬虫（填入UUID）
+    'SKYVECTOR': '287235d2-954b-4d06-8aec-3d6e1daf1bc8',  # SkyVector爬虫（填入UUID）
+    'IEM': '23d84d74-8bea-4aeb-aa06-1572b9a8063d',        # IEM爬虫（填入UUID）
+    'AWC': 'e77b3f72-95b1-4f2d-a06c-1ec9eeabf118',        # AWC爬虫（填入UUID）
+    'NWS': '43567a37-cb75-40ff-82d9-e807434fa9c9',        # NWS爬虫（填入UUID）
 }
 HEALTHCHECKS_BASE_URL = 'https://hc-ping.com'
 HEARTBEAT_INTERVAL = 120  # 心跳间隔（秒），任务运行期间每60秒发送一次
