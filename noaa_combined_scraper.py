@@ -332,9 +332,9 @@ class NOAACombinedManager:
         multi_interval = self._get_env_int('MULTI_INTERVAL', 2)
         
         # 最小间隔限制
-        txt_interval = max(1440, txt_interval)      #一天爬一次
-        ocean_interval = max(1440, ocean_interval)
-        multi_interval = max(1440, multi_interval)
+        txt_interval = max(2, txt_interval)     
+        ocean_interval = max(2, ocean_interval)
+        multi_interval = max(2, multi_interval)
         
         self.logger.info("=" * 70)
         self.logger.info("  NOAA 统一爬虫管理器 v1.0")
