@@ -42,7 +42,7 @@ HEALTHCHECKS_UUIDS = {
     'MULTI': '94bbbe83-2cb3-4125-9a00-1fe96e3b0eb7',    # NOAA 多类型爬虫（填入UUID）
 }
 HEALTHCHECKS_BASE_URL = 'https://hc-ping.com'
-HEARTBEAT_INTERVAL = 1440  # 心跳间隔（秒），任务运行期间每60秒发送一次
+HEARTBEAT_INTERVAL = 60  # 心跳间隔（秒），任务运行期间每60秒发送一次
 
 # 配置日志
 def setup_main_logging():
