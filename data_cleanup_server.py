@@ -15,10 +15,10 @@ import time
 from datetime import datetime, timedelta
 from pathlib import Path
 import psycopg2
-import paramiko
-from scp import SCPClient
+# import paramiko
+# from scp import SCPClient
 import schedule
-from ftplib import FTP
+#from ftplib import FTP
 log_handler = RotatingFileHandler(
     'data_cleanup.log',
     maxBytes=10*1024*1024,  
@@ -55,23 +55,23 @@ DB_CONFIG = {
 
 # ===== 传输方式配置 =====
 # 'smb' = Windows共享文件夹, 'ssh' = SSH/SCP传输, 'ftp' = FTP传输
-TRANSFER_MODE = 'ssh'
+#TRANSFER_MODE = 'ssh'
 
 # SSH配置（连接EC2服务器）
-SSH_CONFIG = {
-    'host': '3.145.18.61',  # EC2公网IP
-    'port': 22,
-    'username': 'ec2-user',
-    'key_file': 'C:/Users/13352/.ssh/ec2_key'  # SSH私钥文件路径
-}
+# SSH_CONFIG = {
+#     'host': '3.145.18.61',  # EC2公网IP
+#     'port': 22,
+#     'username': 'ec2-user',
+#     'key_file': 'C:/Users/13352/.ssh/ec2_key'  # SSH私钥文件路径
+# }
 
 # 服务器上CSV保存路径（SSH模式用）
-SERVER_CSV_DIR = '/home/ec2-user/backup_csv'
+#SERVER_CSV_DIR = '/home/ec2-user/backup_csv'
 
 # SMB共享路径配置（如果使用SMB方式）
-SMB_SERVER_SHARE = r'\\192.168.10.26\noaa_backup'
-SMB_CLIENT_SHARE = r'\\192.168.10.140\backup_csv'
-SMB_SHARE_PATH = SMB_SERVER_SHARE if RUN_MODE == 'local' else SMB_CLIENT_SHARE
+# SMB_SERVER_SHARE = r'\\192.168.10.26\noaa_backup'
+# SMB_CLIENT_SHARE = r'\\192.168.10.140\backup_csv'
+# SMB_SHARE_PATH = SMB_SERVER_SHARE if RUN_MODE == 'local' else SMB_CLIENT_SHARE
 
 # 本地CSV保存路径（脚本所在目录下）
 LOCAL_CSV_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'backup_csv')
@@ -353,10 +353,10 @@ def cleanup_partition_table(conn, base_table, config, keep_count, dry_run=False)
     return result
 
 
-def ensure_remote_dir(ssh, remote_dir):
-    stdin, stdout, stderr = ssh.exec_command(f'mkdir -p {remote_dir}')
-    stdout.read()  
-    logger.info(f"确保远程目录存在: {remote_dir}")
+# def ensure_remote_dir(ssh, remote_dir):
+#     stdin, stdout, stderr = ssh.exec_command(f'mkdir -p {remote_dir}')
+#     stdout.read()  
+#     logger.info(f"确保远程目录存在: {remote_dir}")
 
 
 def count_old_data(conn, table_name, time_column, cutoff_time):
@@ -377,33 +377,33 @@ def get_earliest_time(conn, table_name, time_column):
     return result
 
 
-def export_to_csv_on_server(conn, table_name, time_column, cutoff_time, server_csv_path):
-    """
-    将旧数据导出为CSV（在服务器上执行COPY命令）
-    注意：COPY TO 需要superuser权限或pg_write_server_files角色
-    """
-    cursor = conn.cursor()
+# def export_to_csv_on_server(conn, table_name, time_column, cutoff_time, server_csv_path):
+#     """
+#     将旧数据导出为CSV（在服务器上执行COPY命令）
+#     注意：COPY TO 需要superuser权限或pg_write_server_files角色
+#     """
+#     cursor = conn.cursor()
     
-    # 使用 COPY 命令导出数据到服务器文件
-    # 方案1：直接COPY TO（需要服务器写权限）
-    query = f"""
-    COPY (
-        SELECT * FROM {table_name} 
-        WHERE "{time_column}" < %s
-    ) TO %s WITH CSV HEADER;
-    """
+#     # 使用 COPY 命令导出数据到服务器文件
+#     # 方案1：直接COPY TO（需要服务器写权限）
+#     query = f"""
+#     COPY (
+#         SELECT * FROM {table_name} 
+#         WHERE "{time_column}" < %s
+#     ) TO %s WITH CSV HEADER;
+#     """
     
-    try:
-        cursor.execute(query, (cutoff_time, server_csv_path))
-        conn.commit()
-        logger.info(f"数据已导出到服务器: {server_csv_path}")
-        return True
-    except psycopg2.Error as e:
-        conn.rollback()
-        logger.warning(f"COPY TO 失败（可能权限不足）: {e}")
-        return export_to_csv_via_python(conn, table_name, time_column, cutoff_time, server_csv_path)
-    finally:
-        cursor.close()
+#     try:
+#         cursor.execute(query, (cutoff_time, server_csv_path))
+#         conn.commit()
+#         logger.info(f"数据已导出到服务器: {server_csv_path}")
+#         return True
+#     except psycopg2.Error as e:
+#         conn.rollback()
+#         logger.warning(f"COPY TO 失败（可能权限不足）: {e}")
+#         return export_to_csv_via_python(conn, table_name, time_column, cutoff_time, server_csv_path)
+#     finally:
+#         cursor.close()
 
 
 def export_to_csv_via_python(conn, table_name, time_column, cutoff_time, local_csv_path):
@@ -447,15 +447,15 @@ def delete_old_data(conn, table_name, time_column, cutoff_time, dry_run=False):
     return deleted_count
 
 
-def download_csv_from_server(ssh, remote_path, local_path):
-    try:
-        with SCPClient(ssh.get_transport()) as scp:
-            scp.get(remote_path, local_path)
-        logger.info(f"已下载: {remote_path} -> {local_path}")
-        return True
-    except Exception as e:
-        logger.error(f"下载失败: {e}")
-        return False
+# def download_csv_from_server(ssh, remote_path, local_path):
+#     try:
+#         with SCPClient(ssh.get_transport()) as scp:
+#             scp.get(remote_path, local_path)
+#         logger.info(f"已下载: {remote_path} -> {local_path}")
+#         return True
+#     except Exception as e:
+#         logger.error(f"下载失败: {e}")
+#         return False
 
 
 def cleanup_table(conn, ssh, table_name, time_column, cutoff_time, dry_run=False):
@@ -651,403 +651,403 @@ def cleanup_all_tables(days_ago=0, hours_ago=0, tables=None, dry_run=False):
             ssh.close()
             logger.info("SSH连接已关闭")
 
-def download_csv_from_remote(remote_pattern='*.csv', delete_after=False):
-    """
-    从服务器下载CSV文件到本地，可选择下载后删除服务器文件
-    支持SMB、SSH和FTP三种方式
+# def download_csv_from_remote(remote_pattern='*.csv', delete_after=False):
+#     """
+#     从服务器下载CSV文件到本地，可选择下载后删除服务器文件
+#     支持SMB、SSH和FTP三种方式
     
-    Args:
-        remote_pattern: 远程文件匹配模式
-        delete_after: 下载后是否删除服务器上的文件
-    """
-    logger.info(f"传输方式: {TRANSFER_MODE.upper()}")
+#     Args:
+#         remote_pattern: 远程文件匹配模式
+#         delete_after: 下载后是否删除服务器上的文件
+#     """
+#     logger.info(f"传输方式: {TRANSFER_MODE.upper()}")
     
-    if TRANSFER_MODE == 'smb':
-        download_via_smb(remote_pattern, delete_after)
-    elif TRANSFER_MODE == 'ssh':
-        download_via_ssh(remote_pattern, delete_after)
-    elif TRANSFER_MODE == 'ftp':
-        download_via_ftp(remote_pattern, delete_after)
+#     if TRANSFER_MODE == 'smb':
+#         download_via_smb(remote_pattern, delete_after)
+#     elif TRANSFER_MODE == 'ssh':
+#         download_via_ssh(remote_pattern, delete_after)
+#     elif TRANSFER_MODE == 'ftp':
+#         download_via_ftp(remote_pattern, delete_after)
 
 
-def download_via_smb(remote_pattern='*.csv'):
-    """通过SMB共享文件夹下载"""
-    import shutil
-    import glob
+# def download_via_smb(remote_pattern='*.csv'):
+#     """通过SMB共享文件夹下载"""
+#     import shutil
+#     import glob
     
-    try:
-        if not os.path.exists(SMB_SHARE_PATH):
-            logger.error(f"无法访问共享路径: {SMB_SHARE_PATH}")
-            logger.info("请先运行: net use \\\\192.168.10.26\\noaa_backup /user:Administrator Hthj150328")
-            return
-        remote_files = list(Path(SMB_SHARE_PATH).glob(remote_pattern))
-        if not remote_files:
-            logger.info(f"服务器上没有找到CSV文件: {SMB_SHARE_PATH}\\{remote_pattern}")
-            return
-        logger.info(f"发现 {len(remote_files)} 个CSV文件")
-        Path(LOCAL_CSV_DIR).mkdir(parents=True, exist_ok=True)
-        success_count = 0
-        for remote_file in remote_files:
-            local_file = os.path.join(LOCAL_CSV_DIR, remote_file.name)
-            logger.info(f"下载: {remote_file.name}")
-            shutil.copy2(str(remote_file), local_file)
-            logger.info(f"  -> {local_file}")
-            success_count += 1
-        logger.info(f"下载完成，共 {success_count} 个文件")
-        logger.info(f"本地目录: {LOCAL_CSV_DIR}")
-    except Exception as e:
-        logger.error(f"SMB下载失败: {e}")
+#     try:
+#         if not os.path.exists(SMB_SHARE_PATH):
+#             logger.error(f"无法访问共享路径: {SMB_SHARE_PATH}")
+#             logger.info("请先运行: net use \\\\192.168.10.26\\noaa_backup /user:Administrator Hthj150328")
+#             return
+#         remote_files = list(Path(SMB_SHARE_PATH).glob(remote_pattern))
+#         if not remote_files:
+#             logger.info(f"服务器上没有找到CSV文件: {SMB_SHARE_PATH}\\{remote_pattern}")
+#             return
+#         logger.info(f"发现 {len(remote_files)} 个CSV文件")
+#         Path(LOCAL_CSV_DIR).mkdir(parents=True, exist_ok=True)
+#         success_count = 0
+#         for remote_file in remote_files:
+#             local_file = os.path.join(LOCAL_CSV_DIR, remote_file.name)
+#             logger.info(f"下载: {remote_file.name}")
+#             shutil.copy2(str(remote_file), local_file)
+#             logger.info(f"  -> {local_file}")
+#             success_count += 1
+#         logger.info(f"下载完成，共 {success_count} 个文件")
+#         logger.info(f"本地目录: {LOCAL_CSV_DIR}")
+#     except Exception as e:
+#         logger.error(f"SMB下载失败: {e}")
 
 
-def upload_specific_files(file_paths):
-    """
-    上传指定的CSV文件到服务器（用于cleanup后自动上传）
+# def upload_specific_files(file_paths):
+#     """
+#     上传指定的CSV文件到服务器（用于cleanup后自动上传）
     
-    Args:
-        file_paths: CSV文件路径列表
-    """
-    import shutil
+#     Args:
+#         file_paths: CSV文件路径列表
+#     """
+#     import shutil
     
-    if not file_paths:
-        logger.info("没有需要上传的文件")
-        return
+#     if not file_paths:
+#         logger.info("没有需要上传的文件")
+#         return
     
-    logger.info(f"传输方式: {TRANSFER_MODE.upper()}")
-    files = [Path(f) for f in file_paths]
+#     logger.info(f"传输方式: {TRANSFER_MODE.upper()}")
+#     files = [Path(f) for f in file_paths]
     
-    if TRANSFER_MODE == 'smb':
-        upload_via_smb(files)
-    elif TRANSFER_MODE == 'ssh':
-        upload_via_ssh(files)
-    elif TRANSFER_MODE == 'ftp':
-        upload_via_ftp(files)
+#     if TRANSFER_MODE == 'smb':
+#         upload_via_smb(files)
+#     elif TRANSFER_MODE == 'ssh':
+#         upload_via_ssh(files)
+#     elif TRANSFER_MODE == 'ftp':
+#         upload_via_ftp(files)
 
 
-def upload_csv_to_remote():
-    """
-    上传本地CSV文件到远程服务器（上传目录下所有CSV）
-    支持SMB（Windows共享）和SSH两种方式
-    """
-    import shutil
-    if not os.path.exists(LOCAL_CSV_DIR):
-        logger.error(f"本地目录不存在: {LOCAL_CSV_DIR}")
-        return
+# def upload_csv_to_remote():
+#     """
+#     上传本地CSV文件到远程服务器（上传目录下所有CSV）
+#     支持SMB（Windows共享）和SSH两种方式
+#     """
+#     import shutil
+#     if not os.path.exists(LOCAL_CSV_DIR):
+#         logger.error(f"本地目录不存在: {LOCAL_CSV_DIR}")
+#         return
     
-    local_files = list(Path(LOCAL_CSV_DIR).glob('*.csv'))
-    if not local_files:
-        logger.error(f"本地目录没有CSV文件: {LOCAL_CSV_DIR}")
-        return
+#     local_files = list(Path(LOCAL_CSV_DIR).glob('*.csv'))
+#     if not local_files:
+#         logger.error(f"本地目录没有CSV文件: {LOCAL_CSV_DIR}")
+#         return
     
-    logger.info(f"发现 {len(local_files)} 个本地CSV文件")
-    logger.info(f"传输方式: {TRANSFER_MODE.upper()}")
+#     logger.info(f"发现 {len(local_files)} 个本地CSV文件")
+#     logger.info(f"传输方式: {TRANSFER_MODE.upper()}")
     
-    if TRANSFER_MODE == 'smb':
-        upload_via_smb(local_files)
-    elif TRANSFER_MODE == 'ssh':
-        upload_via_ssh(local_files)
+#     if TRANSFER_MODE == 'smb':
+#         upload_via_smb(local_files)
+#     elif TRANSFER_MODE == 'ssh':
+#         upload_via_ssh(local_files)
 
 
-def upload_via_smb(local_files):
-    """通过SMB共享文件夹上传"""
-    import shutil
-    try:
-        if not os.path.exists(SMB_SHARE_PATH):
-            logger.error(f"无法访问共享路径: {SMB_SHARE_PATH}")
-            logger.info("请确保:")
-            logger.info("  1. 服务器已共享文件夹")
-            logger.info("  2. 共享名正确")
-            logger.info("  3. 有访问权限")
-            logger.info(f"  当前配置: SMB_SHARE_PATH = '{SMB_SHARE_PATH}'")
-            return
+# def upload_via_smb(local_files):
+#     """通过SMB共享文件夹上传"""
+#     import shutil
+#     try:
+#         if not os.path.exists(SMB_SHARE_PATH):
+#             logger.error(f"无法访问共享路径: {SMB_SHARE_PATH}")
+#             logger.info("请确保:")
+#             logger.info("  1. 服务器已共享文件夹")
+#             logger.info("  2. 共享名正确")
+#             logger.info("  3. 有访问权限")
+#             logger.info(f"  当前配置: SMB_SHARE_PATH = '{SMB_SHARE_PATH}'")
+#             return
         
-        logger.info(f"共享路径可访问: {SMB_SHARE_PATH}")
-        success_count = 0
-        for local_file in local_files:
-            remote_file = os.path.join(SMB_SHARE_PATH, local_file.name)
-            logger.info(f"复制: {local_file.name}")
-            shutil.copy2(str(local_file), remote_file)
-            logger.info(f"  -> {remote_file}")
-            success_count += 1
-        logger.info(f"上传完成，共 {success_count} 个文件")
-        logger.info(f"远程目录: {SMB_SHARE_PATH}")
+#         logger.info(f"共享路径可访问: {SMB_SHARE_PATH}")
+#         success_count = 0
+#         for local_file in local_files:
+#             remote_file = os.path.join(SMB_SHARE_PATH, local_file.name)
+#             logger.info(f"复制: {local_file.name}")
+#             shutil.copy2(str(local_file), remote_file)
+#             logger.info(f"  -> {remote_file}")
+#             success_count += 1
+#         logger.info(f"上传完成，共 {success_count} 个文件")
+#         logger.info(f"远程目录: {SMB_SHARE_PATH}")
         
-    except PermissionError as e:
-        logger.error(f"权限不足: {e}")
-        logger.info("请检查共享文件夹的访问权限")
-    except Exception as e:
-        logger.error(f"SMB上传失败: {e}")
+#     except PermissionError as e:
+#         logger.error(f"权限不足: {e}")
+#         logger.info("请检查共享文件夹的访问权限")
+#     except Exception as e:
+#         logger.error(f"SMB上传失败: {e}")
 
 
-def upload_via_ssh(local_files):
-    """通过SSH/SCP上传文件到EC2服务器"""
-    try:
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+# def upload_via_ssh(local_files):
+#     """通过SSH/SCP上传文件到EC2服务器"""
+#     try:
+#         ssh = paramiko.SSHClient()
+#         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         
-        logger.info(f"连接到EC2服务器: {SSH_CONFIG['host']}")
-        ssh.connect(
-            hostname=SSH_CONFIG['host'],
-            port=SSH_CONFIG['port'],
-            username=SSH_CONFIG['username'],
-            key_filename=SSH_CONFIG['key_file']
-        )
-        logger.info("SSH连接成功")
+#         logger.info(f"连接到EC2服务器: {SSH_CONFIG['host']}")
+#         ssh.connect(
+#             hostname=SSH_CONFIG['host'],
+#             port=SSH_CONFIG['port'],
+#             username=SSH_CONFIG['username'],
+#             key_filename=SSH_CONFIG['key_file']
+#         )
+#         logger.info("SSH连接成功")
         
-        # 确保服务器目录存在
-        stdin, stdout, stderr = ssh.exec_command(f"mkdir -p {SERVER_CSV_DIR}")
-        stdout.channel.recv_exit_status()
+#         # 确保服务器目录存在
+#         stdin, stdout, stderr = ssh.exec_command(f"mkdir -p {SERVER_CSV_DIR}")
+#         stdout.channel.recv_exit_status()
         
-        # 使用SCP上传文件
-        with SCPClient(ssh.get_transport()) as scp:
-            success_count = 0
-            for local_file in local_files:
-                remote_path = f"{SERVER_CSV_DIR}/{local_file.name}"
-                logger.info(f"上传: {local_file.name}")
-                scp.put(str(local_file), remote_path)
-                logger.info(f"  -> {remote_path}")
-                success_count += 1
+#         # 使用SCP上传文件
+#         with SCPClient(ssh.get_transport()) as scp:
+#             success_count = 0
+#             for local_file in local_files:
+#                 remote_path = f"{SERVER_CSV_DIR}/{local_file.name}"
+#                 logger.info(f"上传: {local_file.name}")
+#                 scp.put(str(local_file), remote_path)
+#                 logger.info(f"  -> {remote_path}")
+#                 success_count += 1
         
-        logger.info(f"上传完成，共 {success_count} 个文件")
-        logger.info(f"服务器目录: {SERVER_CSV_DIR}")
-        ssh.close()
+#         logger.info(f"上传完成，共 {success_count} 个文件")
+#         logger.info(f"服务器目录: {SERVER_CSV_DIR}")
+#         ssh.close()
         
-    except Exception as e:
-        logger.error(f"SSH上传失败: {e}")
-        if 'ssh' in locals():
-            ssh.close()
+#     except Exception as e:
+#         logger.error(f"SSH上传失败: {e}")
+#         if 'ssh' in locals():
+#             ssh.close()
 
 
-def download_via_ssh(remote_pattern='*.csv', delete_after=False):
-    """通过SSH/SCP从EC2服务器下载文件"""
-    try:
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+# def download_via_ssh(remote_pattern='*.csv', delete_after=False):
+#     """通过SSH/SCP从EC2服务器下载文件"""
+#     try:
+#         ssh = paramiko.SSHClient()
+#         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         
-        logger.info(f"连接到EC2服务器: {SSH_CONFIG['host']}")
-        ssh.connect(
-            hostname=SSH_CONFIG['host'],
-            port=SSH_CONFIG['port'],
-            username=SSH_CONFIG['username'],
-            key_filename=SSH_CONFIG['key_file']
-        )
-        logger.info("SSH连接成功")
+#         logger.info(f"连接到EC2服务器: {SSH_CONFIG['host']}")
+#         ssh.connect(
+#             hostname=SSH_CONFIG['host'],
+#             port=SSH_CONFIG['port'],
+#             username=SSH_CONFIG['username'],
+#             key_filename=SSH_CONFIG['key_file']
+#         )
+#         logger.info("SSH连接成功")
         
-        # 列出服务器上的CSV文件
-        cmd = f"ls {SERVER_CSV_DIR}/{remote_pattern} 2>/dev/null || echo 'NO_FILES'"
-        stdin, stdout, stderr = ssh.exec_command(cmd)
-        output = stdout.read().decode().strip()
+#         # 列出服务器上的CSV文件
+#         cmd = f"ls {SERVER_CSV_DIR}/{remote_pattern} 2>/dev/null || echo 'NO_FILES'"
+#         stdin, stdout, stderr = ssh.exec_command(cmd)
+#         output = stdout.read().decode().strip()
         
-        if output == 'NO_FILES' or not output:
-            logger.info(f"服务器上没有找到CSV文件: {SERVER_CSV_DIR}/{remote_pattern}")
-            ssh.close()
-            return
+#         if output == 'NO_FILES' or not output:
+#             logger.info(f"服务器上没有找到CSV文件: {SERVER_CSV_DIR}/{remote_pattern}")
+#             ssh.close()
+#             return
         
-        remote_files = output.split('\n')
-        logger.info(f"发现 {len(remote_files)} 个CSV文件")
+#         remote_files = output.split('\n')
+#         logger.info(f"发现 {len(remote_files)} 个CSV文件")
         
-        # 创建本地目录
-        Path(LOCAL_CSV_DIR).mkdir(parents=True, exist_ok=True)
+#         # 创建本地目录
+#         Path(LOCAL_CSV_DIR).mkdir(parents=True, exist_ok=True)
         
-        # 使用SCP下载文件
-        with SCPClient(ssh.get_transport()) as scp:
-            success_count = 0
-            for remote_file in remote_files:
-                filename = os.path.basename(remote_file)
-                local_path = os.path.join(LOCAL_CSV_DIR, filename)
-                logger.info(f"下载: {filename}")
-                scp.get(remote_file, local_path)
-                logger.info(f"  -> {local_path}")
-                success_count += 1
+#         # 使用SCP下载文件
+#         with SCPClient(ssh.get_transport()) as scp:
+#             success_count = 0
+#             for remote_file in remote_files:
+#                 filename = os.path.basename(remote_file)
+#                 local_path = os.path.join(LOCAL_CSV_DIR, filename)
+#                 logger.info(f"下载: {filename}")
+#                 scp.get(remote_file, local_path)
+#                 logger.info(f"  -> {local_path}")
+#                 success_count += 1
                 
-                # 如果指定删除，则删除服务器文件
-                if delete_after:
-                    stdin, stdout, stderr = ssh.exec_command(f"rm -f {remote_file}")
-                    stdout.channel.recv_exit_status()
-                    logger.info(f"  已删除服务器文件: {remote_file}")
+#                 # 如果指定删除，则删除服务器文件
+#                 if delete_after:
+#                     stdin, stdout, stderr = ssh.exec_command(f"rm -f {remote_file}")
+#                     stdout.channel.recv_exit_status()
+#                     logger.info(f"  已删除服务器文件: {remote_file}")
         
-        logger.info(f"下载完成，共 {success_count} 个文件")
-        logger.info(f"本地目录: {LOCAL_CSV_DIR}")
+#         logger.info(f"下载完成，共 {success_count} 个文件")
+#         logger.info(f"本地目录: {LOCAL_CSV_DIR}")
         
-        if delete_after:
-            logger.info(f"服务器文件已全部删除")
+#         if delete_after:
+#             logger.info(f"服务器文件已全部删除")
         
-        ssh.close()
+#         ssh.close()
         
-    except Exception as e:
-        logger.error(f"SSH下载失败: {e}")
-        if 'ssh' in locals():
-            ssh.close()
+#     except Exception as e:
+#         logger.error(f"SSH下载失败: {e}")
+#         if 'ssh' in locals():
+#             ssh.close()
 
 
-def download_via_ftp(remote_pattern='*.csv', delete_after=False):
-    """通过FTP下载CSV文件"""
-    try:
-        logger.info(f"连接到FTP服务器: {FTP_CONFIG['host']}:{FTP_CONFIG['port']}")
-        ftp = FTP()
-        ftp.connect(FTP_CONFIG['host'], FTP_CONFIG['port'])
-        ftp.login(FTP_CONFIG['username'], FTP_CONFIG['password'])
-        ftp.cwd(FTP_CONFIG['remote_dir'])
-        logger.info("FTP连接成功")
+# def download_via_ftp(remote_pattern='*.csv', delete_after=False):
+#     """通过FTP下载CSV文件"""
+#     try:
+#         logger.info(f"连接到FTP服务器: {FTP_CONFIG['host']}:{FTP_CONFIG['port']}")
+#         ftp = FTP()
+#         ftp.connect(FTP_CONFIG['host'], FTP_CONFIG['port'])
+#         ftp.login(FTP_CONFIG['username'], FTP_CONFIG['password'])
+#         ftp.cwd(FTP_CONFIG['remote_dir'])
+#         logger.info("FTP连接成功")
         
-        # 列出远程文件
-        remote_files = []
-        ftp.dir(lambda x: remote_files.append(x.split()[-1]))
+#         # 列出远程文件
+#         remote_files = []
+#         ftp.dir(lambda x: remote_files.append(x.split()[-1]))
         
-        # 过滤CSV文件
-        import fnmatch
-        csv_files = [f for f in remote_files if fnmatch.fnmatch(f, remote_pattern)]
+#         # 过滤CSV文件
+#         import fnmatch
+#         csv_files = [f for f in remote_files if fnmatch.fnmatch(f, remote_pattern)]
         
-        if not csv_files:
-            logger.info(f"FTP服务器上没有找到CSV文件: {FTP_CONFIG['remote_dir']}/{remote_pattern}")
-            ftp.quit()
-            return
+#         if not csv_files:
+#             logger.info(f"FTP服务器上没有找到CSV文件: {FTP_CONFIG['remote_dir']}/{remote_pattern}")
+#             ftp.quit()
+#             return
         
-        logger.info(f"发现 {len(csv_files)} 个CSV文件")
+#         logger.info(f"发现 {len(csv_files)} 个CSV文件")
         
-        # 创建本地目录
-        Path(LOCAL_CSV_DIR).mkdir(parents=True, exist_ok=True)
+#         # 创建本地目录
+#         Path(LOCAL_CSV_DIR).mkdir(parents=True, exist_ok=True)
         
-        success_count = 0
-        for filename in csv_files:
-            local_path = os.path.join(LOCAL_CSV_DIR, filename)
-            logger.info(f"下载: {filename}")
+#         success_count = 0
+#         for filename in csv_files:
+#             local_path = os.path.join(LOCAL_CSV_DIR, filename)
+#             logger.info(f"下载: {filename}")
             
-            with open(local_path, 'wb') as f:
-                ftp.retrbinary(f'RETR {filename}', f.write)
+#             with open(local_path, 'wb') as f:
+#                 ftp.retrbinary(f'RETR {filename}', f.write)
             
-            file_size = os.path.getsize(local_path)
-            size_mb = file_size / (1024 * 1024)
-            logger.info(f"  -> {local_path} ({size_mb:.2f} MB)")
-            success_count += 1
+#             file_size = os.path.getsize(local_path)
+#             size_mb = file_size / (1024 * 1024)
+#             logger.info(f"  -> {local_path} ({size_mb:.2f} MB)")
+#             success_count += 1
             
-            # 如果指定删除，则删除服务器文件
-            if delete_after:
-                ftp.delete(filename)
-                logger.info(f"  已删除FTP服务器文件: {filename}")
+#             # 如果指定删除，则删除服务器文件
+#             if delete_after:
+#                 ftp.delete(filename)
+#                 logger.info(f"  已删除FTP服务器文件: {filename}")
         
-        logger.info(f"下载完成，共 {success_count} 个文件")
-        logger.info(f"本地目录: {LOCAL_CSV_DIR}")
+#         logger.info(f"下载完成，共 {success_count} 个文件")
+#         logger.info(f"本地目录: {LOCAL_CSV_DIR}")
         
-        if delete_after:
-            logger.info(f"FTP服务器文件已全部删除")
+#         if delete_after:
+#             logger.info(f"FTP服务器文件已全部删除")
         
-        ftp.quit()
+#         ftp.quit()
         
-    except Exception as e:
-        logger.error(f"FTP下载失败: {e}")
-        if 'ftp' in locals():
-            try:
-                ftp.quit()
-            except:
-                pass
+#     except Exception as e:
+#         logger.error(f"FTP下载失败: {e}")
+#         if 'ftp' in locals():
+#             try:
+#                 ftp.quit()
+#             except:
+#                 pass
 
 
-def upload_via_ftp(local_files):
-    """通过FTP上传CSV文件"""
-    try:
-        logger.info(f"连接到FTP服务器: {FTP_CONFIG['host']}:{FTP_CONFIG['port']}")
-        ftp = FTP()
-        ftp.connect(FTP_CONFIG['host'], FTP_CONFIG['port'])
-        ftp.login(FTP_CONFIG['username'], FTP_CONFIG['password'])
+# def upload_via_ftp(local_files):
+#     """通过FTP上传CSV文件"""
+#     try:
+#         logger.info(f"连接到FTP服务器: {FTP_CONFIG['host']}:{FTP_CONFIG['port']}")
+#         ftp = FTP()
+#         ftp.connect(FTP_CONFIG['host'], FTP_CONFIG['port'])
+#         ftp.login(FTP_CONFIG['username'], FTP_CONFIG['password'])
         
-        # 切换到远程目录（如果不存在则创建）
-        try:
-            ftp.cwd(FTP_CONFIG['remote_dir'])
-        except:
-            logger.info(f"远程目录不存在，尝试创建: {FTP_CONFIG['remote_dir']}")
-            # 逐级创建目录
-            parts = FTP_CONFIG['remote_dir'].strip('/').split('/')
-            for part in parts:
-                try:
-                    ftp.cwd(part)
-                except:
-                    ftp.mkd(part)
-                    ftp.cwd(part)
+#         # 切换到远程目录（如果不存在则创建）
+#         try:
+#             ftp.cwd(FTP_CONFIG['remote_dir'])
+#         except:
+#             logger.info(f"远程目录不存在，尝试创建: {FTP_CONFIG['remote_dir']}")
+#             # 逐级创建目录
+#             parts = FTP_CONFIG['remote_dir'].strip('/').split('/')
+#             for part in parts:
+#                 try:
+#                     ftp.cwd(part)
+#                 except:
+#                     ftp.mkd(part)
+#                     ftp.cwd(part)
         
-        logger.info("FTP连接成功")
+#         logger.info("FTP连接成功")
         
-        success_count = 0
-        for local_file in local_files:
-            logger.info(f"上传: {local_file.name}")
+#         success_count = 0
+#         for local_file in local_files:
+#             logger.info(f"上传: {local_file.name}")
             
-            with open(local_file, 'rb') as f:
-                ftp.storbinary(f'STOR {local_file.name}', f)
+#             with open(local_file, 'rb') as f:
+#                 ftp.storbinary(f'STOR {local_file.name}', f)
             
-            file_size = os.path.getsize(local_file)
-            size_mb = file_size / (1024 * 1024)
-            logger.info(f"  -> {FTP_CONFIG['remote_dir']}/{local_file.name} ({size_mb:.2f} MB)")
-            success_count += 1
+#             file_size = os.path.getsize(local_file)
+#             size_mb = file_size / (1024 * 1024)
+#             logger.info(f"  -> {FTP_CONFIG['remote_dir']}/{local_file.name} ({size_mb:.2f} MB)")
+#             success_count += 1
         
-        logger.info(f"上传完成，共 {success_count} 个文件")
-        logger.info(f"FTP服务器: {FTP_CONFIG['host']}:{FTP_CONFIG['port']}/{FTP_CONFIG['remote_dir']}")
+#         logger.info(f"上传完成，共 {success_count} 个文件")
+#         logger.info(f"FTP服务器: {FTP_CONFIG['host']}:{FTP_CONFIG['port']}/{FTP_CONFIG['remote_dir']}")
         
-        ftp.quit()
+#         ftp.quit()
         
-    except Exception as e:
-        logger.error(f"FTP上传失败: {e}")
-        if 'ftp' in locals():
-            try:
-                ftp.quit()
-            except:
-                pass
+#     except Exception as e:
+#         logger.error(f"FTP上传失败: {e}")
+#         if 'ftp' in locals():
+#             try:
+#                 ftp.quit()
+#             except:
+#                 pass
 
 
-def cleanup_remote_logs(days_to_keep=7, log_dir='/home/ec2-user/scraper-logs'):
-    """
-    清理EC2服务器上的旧日志文件
+# def cleanup_remote_logs(days_to_keep=7, log_dir='/home/ec2-user/scraper-logs'):
+#     """
+#     清理EC2服务器上的旧日志文件
     
-    Args:
-        days_to_keep: 保留最近多少天的日志
-        log_dir: 服务器日志目录路径
-    """
-    try:
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+#     Args:
+#         days_to_keep: 保留最近多少天的日志
+#         log_dir: 服务器日志目录路径
+#     """
+#     try:
+#         ssh = paramiko.SSHClient()
+#         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         
-        logger.info(f"连接到EC2服务器: {SSH_CONFIG['host']}")
-        ssh.connect(
-            hostname=SSH_CONFIG['host'],
-            port=SSH_CONFIG['port'],
-            username=SSH_CONFIG['username'],
-            key_filename=SSH_CONFIG['key_file']
-        )
-        logger.info("SSH连接成功")
+#         logger.info(f"连接到EC2服务器: {SSH_CONFIG['host']}")
+#         ssh.connect(
+#             hostname=SSH_CONFIG['host'],
+#             port=SSH_CONFIG['port'],
+#             username=SSH_CONFIG['username'],
+#             key_filename=SSH_CONFIG['key_file']
+#         )
+#         logger.info("SSH连接成功")
         
-        # 查看日志文件
-        logger.info(f"检查日志目录: {log_dir}")
-        stdin, stdout, stderr = ssh.exec_command(f"ls -lh {log_dir} 2>/dev/null || echo 'NO_DIR'")
-        output = stdout.read().decode().strip()
+#         # 查看日志文件
+#         logger.info(f"检查日志目录: {log_dir}")
+#         stdin, stdout, stderr = ssh.exec_command(f"ls -lh {log_dir} 2>/dev/null || echo 'NO_DIR'")
+#         output = stdout.read().decode().strip()
         
-        if output == 'NO_DIR':
-            logger.warning(f"日志目录不存在: {log_dir}")
-            ssh.close()
-            return
+#         if output == 'NO_DIR':
+#             logger.warning(f"日志目录不存在: {log_dir}")
+#             ssh.close()
+#             return
         
-        logger.info(f"当前日志文件:\n{output}")
+#         logger.info(f"当前日志文件:\n{output}")
         
-        # 删除N天前的日志文件
-        cmd = f"find {log_dir} -name '*.log' -type f -mtime +{days_to_keep} -delete"
-        logger.info(f"\n执行清理命令: {cmd}")
-        stdin, stdout, stderr = ssh.exec_command(cmd)
-        stdout.channel.recv_exit_status()
+#         # 删除N天前的日志文件
+#         cmd = f"find {log_dir} -name '*.log' -type f -mtime +{days_to_keep} -delete"
+#         logger.info(f"\n执行清理命令: {cmd}")
+#         stdin, stdout, stderr = ssh.exec_command(cmd)
+#         stdout.channel.recv_exit_status()
         
-        # 显示清理后的状态
-        stdin, stdout, stderr = ssh.exec_command(f"du -sh {log_dir}")
-        size = stdout.read().decode().strip()
-        logger.info(f"清理完成，当前目录大小: {size}")
+#         # 显示清理后的状态
+#         stdin, stdout, stderr = ssh.exec_command(f"du -sh {log_dir}")
+#         size = stdout.read().decode().strip()
+#         logger.info(f"清理完成，当前目录大小: {size}")
         
-        # 显示保留的文件
-        stdin, stdout, stderr = ssh.exec_command(f"ls -lh {log_dir}/*.log 2>/dev/null | wc -l")
-        count = stdout.read().decode().strip()
-        logger.info(f"保留的日志文件数量: {count}")
+#         # 显示保留的文件
+#         stdin, stdout, stderr = ssh.exec_command(f"ls -lh {log_dir}/*.log 2>/dev/null | wc -l")
+#         count = stdout.read().decode().strip()
+#         logger.info(f"保留的日志文件数量: {count}")
         
-        ssh.close()
-        logger.info(f"已删除 {days_to_keep} 天前的日志文件")
+#         ssh.close()
+#         logger.info(f"已删除 {days_to_keep} 天前的日志文件")
         
-    except Exception as e:
-        logger.error(f"清理远程日志失败: {e}")
-        if 'ssh' in locals():
-            ssh.close()
+#     except Exception as e:
+#         logger.error(f"清理远程日志失败: {e}")
+#         if 'ssh' in locals():
+#             ssh.close()
 
 
 def scheduled_cleanup():
@@ -1158,14 +1158,14 @@ def main():
             tables=args.tables,
             dry_run=args.dry_run )
     
-    elif args.command == 'download':
-        download_csv_from_remote(args.pattern, delete_after=args.delete)
+    # elif args.command == 'download':
+    #     download_csv_from_remote(args.pattern, delete_after=args.delete)
     
-    elif args.command == 'upload':
-        upload_csv_to_remote()
+    # elif args.command == 'upload':
+    #     upload_csv_to_remote()
     
-    elif args.command == 'cleanup-logs':
-        cleanup_remote_logs(days_to_keep=args.days, log_dir=args.log_dir)
+    # elif args.command == 'cleanup-logs':
+    #     cleanup_remote_logs(days_to_keep=args.days, log_dir=args.log_dir)
     
     elif args.command == 'stats':
         show_table_stats()
