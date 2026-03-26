@@ -290,19 +290,19 @@ def run_ogimet_metar_taf():
         gc.collect()
 
 
-def run_ogimet_synop():
-    """运行 OGIMET SYNOP 爬虫"""
-    import logging
-    import gc
+# def run_ogimet_synop():
+#     """运行 OGIMET SYNOP 爬虫"""
+#     import logging
+#     import gc
     
-    from ogimet_synop_scraper import SynopScraper
-    scraper = SynopScraper(delay=0.2, max_workers=5, use_database=True)
-    try:
-        scraper.scrape_all(use_multithreading=True)
-    finally:
-        scraper.close()
-        del scraper
-        gc.collect()
+#     from ogimet_synop_scraper import SynopScraper
+#     scraper = SynopScraper(delay=0.2, max_workers=5, use_database=True)
+#     try:
+#         scraper.scrape_all(use_multithreading=True)
+#     finally:
+#         scraper.close()
+#         del scraper
+#         gc.collect()
 
 
 def run_skyvector():
@@ -412,7 +412,8 @@ class OgimetCombinedManager:
         
         # 原有爬虫开关
         enable_ogimet = self._get_env_bool('ENABLE_OGIMET', True)
-        enable_synop = self._get_env_bool('ENABLE_SYNOP', True)
+        #enable_synop = self._get_env_bool('ENABLE_SYNOP', True)
+        enable_synop = False
         enable_skyvector = self._get_env_bool('ENABLE_SKYVECTOR', True)
         # 新增爬虫开关
         enable_iem = self._get_env_bool('ENABLE_IEM', True)
@@ -458,15 +459,15 @@ class OgimetCombinedManager:
             except ImportError as e:
                 self.logger.error(f"✗ 无法导入 OGIMET 爬虫: {e}")
         
-        # 2. OGIMET SYNOP 爬虫
-        if enable_synop:
-            try:
-                from ogimet_synop_scraper import SynopScraper
-                runner = ScraperRunner('SYNOP', run_ogimet_synop, synop_interval)
-                self.runners.append(runner)
-                self.logger.info(f"✓ OGIMET SYNOP 爬虫已注册 (间隔 {synop_interval} 分钟)")
-            except ImportError as e:
-                self.logger.error(f"✗ 无法导入 SYNOP 爬虫: {e}")
+        # # 2. OGIMET SYNOP 爬虫
+        # if enable_synop:
+        #     try:
+        #         from ogimet_synop_scraper import SynopScraper
+        #         runner = ScraperRunner('SYNOP', run_ogimet_synop, synop_interval)
+        #         self.runners.append(runner)
+        #         self.logger.info(f"✓ OGIMET SYNOP 爬虫已注册 (间隔 {synop_interval} 分钟)")
+        #     except ImportError as e:
+        #         self.logger.error(f"✗ 无法导入 SYNOP 爬虫: {e}")
         
         # 3. SkyVector 爬虫
         if enable_skyvector:
