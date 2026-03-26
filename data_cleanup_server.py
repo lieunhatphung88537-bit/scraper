@@ -491,21 +491,21 @@ def cleanup_table(conn, ssh, table_name, time_column, cutoff_time, dry_run=False
     if dry_run:
         logger.info(f"[DRY RUN] {table_name}: 将清理 {count} 条数据")
         return result
-    # 使用原表名作为CSV文件名
-    csv_filename = f"{table_name}.csv"
-    # 3. 导出数据到CSV
-    # 优先尝试服务器端COPY，失败则使用本地导出
-    Path(LOCAL_CSV_DIR).mkdir(parents=True, exist_ok=True)
-    local_csv_path = os.path.join(LOCAL_CSV_DIR, csv_filename)
-    # 直接使用Python导出到本地（更可靠）
-    exported = export_to_csv_via_python(conn, table_name, time_column, cutoff_time, local_csv_path)
-    if exported:
-        result['exported'] = True
-        result['csv_path'] = local_csv_path
-        logger.info(f"{table_name}: CSV导出成功 -> {local_csv_path}")
-    else:
-        logger.error(f"{table_name}: CSV导出失败，跳过删除操作")
-        return result
+    # # 使用原表名作为CSV文件名
+    # csv_filename = f"{table_name}.csv"
+    # # 3. 导出数据到CSV
+    # # 优先尝试服务器端COPY，失败则使用本地导出
+    # Path(LOCAL_CSV_DIR).mkdir(parents=True, exist_ok=True)
+    # local_csv_path = os.path.join(LOCAL_CSV_DIR, csv_filename)
+    # # 直接使用Python导出到本地（更可靠）
+    # exported = export_to_csv_via_python(conn, table_name, time_column, cutoff_time, local_csv_path)
+    # if exported:
+    #     result['exported'] = True
+    #     result['csv_path'] = local_csv_path
+    #     logger.info(f"{table_name}: CSV导出成功 -> {local_csv_path}")
+    # else:
+    #     logger.error(f"{table_name}: CSV导出失败，跳过删除操作")
+    #     return result
     deleted_count = delete_old_data(conn, table_name, time_column, cutoff_time, dry_run)
     result['deleted'] = deleted_count > 0
     return result
