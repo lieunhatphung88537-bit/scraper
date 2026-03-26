@@ -40,10 +40,10 @@ logger = logging.getLogger(__name__)
 RUN_MODE = 'server'
 
 # 定时任务配置
-SCHEDULE_INTERVAL = 60 # 定时间隔（小时或天数）
+SCHEDULE_INTERVAL = 30 # 定时间隔（小时或天数）
 SCHEDULE_UNIT = 'days'  # 'hours' = 小时, 'days' = 天
 SCHEDULE_TIME = '02:00'  # 执行时间（仅当SCHEDULE_UNIT='days'时有效）
-SCHEDULE_CLEANUP_DAYS = 60 # 清理多少天前的数据，保留最近2个月（60天）
+SCHEDULE_CLEANUP_DAYS = 30 # 清理多少天前的数据，保留最近2个月（60天）
 #数据库配置
 DB_CONFIG = {
     'host': 'database-1.cxik82g8267p.us-east-2.rds.amazonaws.com',
@@ -145,10 +145,10 @@ PARTITION_TABLES_CONFIG = {
      'dart_data': {'partition_type': 'monthly', 'time_column': 'observation_time', 'db_config': 'noaa'},
     
     # ===== 年分区表（typhoon_data 库，格式：table_2025）=====
-    # 'typhoon_forecast': {'partition_type': 'yearly', 'time_column': 'update_time', 'db_config': 'typhoon'},
-    # 'typhoon_history': {'partition_type': 'yearly', 'time_column': 'update_time', 'db_config': 'typhoon'},
-    # 'typhoon_info': {'partition_type': 'yearly', 'time_column': 'update_time', 'db_config': 'typhoon'},
-    # 'raodong': {'partition_type': 'yearly', 'time_column': 'observation_time', 'db_config': 'typhoon'},
+    'typhoon_forecast': {'partition_type': 'yearly', 'time_column': 'update_time', 'db_config': 'typhoon'},
+    'typhoon_history': {'partition_type': 'yearly', 'time_column': 'update_time', 'db_config': 'typhoon'},
+    'typhoon_info': {'partition_type': 'yearly', 'time_column': 'update_time', 'db_config': 'typhoon'},
+    'raodong': {'partition_type': 'yearly', 'time_column': 'observation_time', 'db_config': 'typhoon'},
     
     # ===== 年分区表（noaa_data 库）=====
     # 'drift_data': {'partition_type': 'yearly', 'time_column': 'observation_time', 'db_config': 'noaa'},
@@ -342,21 +342,12 @@ def cleanup_partition_table(conn, base_table, config, keep_count, dry_run=False)
     Path(LOCAL_CSV_DIR).mkdir(parents=True, exist_ok=True)
     
     for partition_name in partitions:
-        # 1. 导出分区（使用原分区表名作为CSV文件名）
-        csv_filename = f"{partition_name}.csv"
-        local_csv_path = os.path.join(LOCAL_CSV_DIR, csv_filename)
-        
-        exported = export_partition_to_csv(conn, partition_name, local_csv_path)
-        if exported:
-            result['partitions_exported'] += 1
-            result['csv_paths'].append(local_csv_path)
-            
-            # 2. 删除分区
-            dropped = drop_partition(conn, partition_name, dry_run)
-            if dropped:
-                result['partitions_dropped'] += 1
+        # 不再导出 CSV，直接删除旧分区
+        dropped = drop_partition(conn, partition_name, dry_run)
+        if dropped:
+            result['partitions_dropped'] += 1
         else:
-            logger.warning(f"跳过删除 {partition_name}（导出失败）")
+            logger.warning(f"删除分区失败 {partition_name}")
     
     logger.info(f"{base_table}: 清理完成 - 导出 {result['partitions_exported']}, 删除 {result['partitions_dropped']}")
     return result
@@ -590,14 +581,14 @@ def cleanup_all_tables(days_ago=0, hours_ago=0, tables=None, dry_run=False):
                     # 根据分区类型确定保留分区数量
                     partition_type = config.get('partition_type', 'ten_days')
                     if partition_type == 'ten_days':
-                        keep_count = 6  # 保留最近6个10天分区（60天）
-                        keep_desc = "6个分区（60天）"
+                        keep_count = 3  # 保留最近3个10天分区（30天）
+                        keep_desc = "3个分区（30天）"
                     elif partition_type == 'monthly':
-                        keep_count = 2  # 保留最近2个月分区（2个月）
-                        keep_desc = "2个分区（2个月）"
+                        keep_count = 1  # 保留最近1个月分区（1个月）
+                        keep_desc = "1个分区（1个月）"
                     elif partition_type == 'yearly':
-                        keep_count = 2  # 保留最近2年分区
-                        keep_desc = "2个分区（2年）"
+                        keep_count = 1  # 保留最近1年分区
+                        keep_desc = "1个分区（1年）"
                     else:
                         keep_count = 2  # 默认保留2个分区
                         keep_desc = "2个分区"
